@@ -43,7 +43,7 @@ const EXAMPLE_PROMPTS = [
   {
     title: "贪吃蛇游戏",
     prompt:
-      "生成一个支持键盘操作的贪吃蛇游戏，包含分数显示、暂停继续和重新开始按钮，并做出不同的视觉风格与布局，不要套用固定模板。",
+      "生成一个支持键盘操作的贪吃蛇游戏，包含分数显示、暂停继续和重新开始按钮，并做出不同的视觉风格与布局。",
   },
   {
     title: "弹球游戏",
@@ -535,20 +535,23 @@ export const ChatContainer = React.forwardRef<ChatContainerRef, ChatContainerPro
       return (
         <div className={cn("flex h-full min-h-0 flex-col", className)}>
           <div className="flex flex-1 items-center justify-center p-8">
-            <div className="max-w-md space-y-4 text-center">
-              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-500 to-purple-600">
-                <Settings className="h-8 w-8 text-white" />
+            <div className="max-w-md space-y-5 text-center">
+              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-amber-100 text-amber-600">
+                <AlertCircle className="h-8 w-8" />
               </div>
-              <div className="space-y-2">
-                <h3 className="text-lg font-semibold">Configure Your API Key</h3>
-                <p className="text-sm text-muted-foreground">
-                  Add your OpenAI-compatible API key to start generating code with AI.
+              <div className="space-y-2.5">
+                <h3 className="text-lg font-semibold">请先配置 API Key</h3>
+                <p className="text-sm leading-6 text-muted-foreground">
+                  当前还没有可用的模型配置。请先在设置中填写 API Key、Base URL 和 Model ID，再开始生成代码。
                 </p>
+              </div>
+              <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
+                配置完成后再发起 NewChat 或发送消息，避免请求直接失败。
               </div>
               {onSettingsClick && (
                 <Button onClick={onSettingsClick} className="gap-2">
                   <Settings className="h-4 w-4" />
-                  Open Settings
+                  打开设置
                 </Button>
               )}
             </div>
