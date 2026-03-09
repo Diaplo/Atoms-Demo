@@ -201,7 +201,7 @@ function BuilderContent({
   onViewChange,
   isStreaming,
   isHydratingHistory,
-  previewAutoRefreshToken,
+  onRequestPreviewSessionReset,
   currentFiles,
   activeFile,
   onFileChange,
@@ -212,7 +212,7 @@ function BuilderContent({
   onViewChange: (view: ViewTab) => void
   isStreaming: boolean
   isHydratingHistory: boolean
-  previewAutoRefreshToken: number
+  onRequestPreviewSessionReset: () => void
   currentFiles: CodeFiles
   activeFile: string | null
   onFileChange: (path: string) => void
@@ -272,7 +272,7 @@ function BuilderContent({
             files={currentFiles}
             className="h-full rounded-none border-0"
             useSharedProvider={useSharedProvider}
-            autoRefreshToken={previewAutoRefreshToken}
+            onRequestSessionReset={onRequestPreviewSessionReset}
           />
           {isHydratingHistory && (
             <div className="absolute inset-0 z-50 flex h-full min-h-0 min-w-0 flex-col overflow-hidden rounded-none border-0 bg-zinc-950/94 backdrop-blur-sm">
@@ -313,10 +313,9 @@ export function BuilderLayout({ className, defaultView = "split" }: BuilderLayou
   const [versionsError, setVersionsError] = React.useState<string | null>(null)
   const [hydratedChatId, setHydratedChatId] = React.useState<string | null>(null)
   const [bundlerUrl, setBundlerUrl] = React.useState(SANDPACK_BUNDLER_URL)
-  const [previewAutoRefreshToken, setPreviewAutoRefreshToken] = React.useState(0)
+  const [previewSessionToken, setPreviewSessionToken] = React.useState(0)
   const dragStartXRef = React.useRef(0)
   const dragStartWidthRef = React.useRef(0)
-  const wasHydratingHistoryRef = React.useRef(false)
   const versionsRequestIdRef = React.useRef(0)
 
   const currentFiles = useCurrentFiles()
@@ -574,6 +573,7 @@ export function BuilderLayout({ className, defaultView = "split" }: BuilderLayou
     }
 
     clearVersions()
+    clearFiles()
     void loadVersions(activeChatId)
   }, [activeChatId, clearFiles, clearVersions, hydrateVersions, loadVersions])
 
@@ -634,25 +634,15 @@ export function BuilderLayout({ className, defaultView = "split" }: BuilderLayou
     setActiveFile,
   ])
 
-  React.useEffect(() => {
-    const finishedHydratingHistory =
-      wasHydratingHistoryRef.current &&
-      !isHydratingHistory &&
-      Boolean(activeChatId) &&
-      hasSandpackRuntime
-
-    if (finishedHydratingHistory) {
-      setPreviewAutoRefreshToken((current) => current + 1)
-    }
-
-    wasHydratingHistoryRef.current = isHydratingHistory
-  }, [activeChatId, hasSandpackRuntime, isHydratingHistory])
+  const handlePreviewSessionReset = React.useCallback(() => {
+    setPreviewSessionToken((current) => current + 1)
+  }, [])
 
   const providerOptions = React.useMemo(
     () => ({
       activeFile: primaryActiveFile ?? undefined,
       visibleFiles: visibleEditorFiles,
-      autorun: !isHydratingHistory,
+      autorun: false,
       autoReload: true,
       bundlerURL: bundlerUrl,
       initMode: "immediate" as const,
@@ -662,7 +652,7 @@ export function BuilderLayout({ className, defaultView = "split" }: BuilderLayou
         "sp-layout": "flex h-full min-h-0 min-w-0 flex-1 overflow-hidden",
       },
     }),
-    [bundlerUrl, isHydratingHistory, primaryActiveFile, visibleEditorFiles]
+    [bundlerUrl, primaryActiveFile, visibleEditorFiles]
   )
   const providerCustomSetup = React.useMemo(
     () => (sandpackEntryFile ? { entry: sandpackEntryFile } : undefined),
@@ -693,7 +683,7 @@ export function BuilderLayout({ className, defaultView = "split" }: BuilderLayou
       <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
         {hasSandpackRuntime ? (
           <SandpackProvider
-            key={bundlerUrl}
+            key={`${bundlerUrl}:${previewSessionToken}`}
             className="flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden"
             template="react-ts"
             theme="dark"
@@ -706,7 +696,7 @@ export function BuilderLayout({ className, defaultView = "split" }: BuilderLayou
               onViewChange={setActiveView}
               isStreaming={isStreaming}
               isHydratingHistory={isHydratingHistory}
-              previewAutoRefreshToken={previewAutoRefreshToken}
+              onRequestPreviewSessionReset={handlePreviewSessionReset}
               currentFiles={currentFiles}
               activeFile={activeFile}
               onFileChange={handleFileChange}
@@ -720,7 +710,7 @@ export function BuilderLayout({ className, defaultView = "split" }: BuilderLayou
             onViewChange={setActiveView}
             isStreaming={isStreaming}
             isHydratingHistory={isHydratingHistory}
-            previewAutoRefreshToken={previewAutoRefreshToken}
+            onRequestPreviewSessionReset={handlePreviewSessionReset}
             currentFiles={hasAnyFiles ? currentFiles : {}}
             activeFile={activeFile}
             onFileChange={handleFileChange}

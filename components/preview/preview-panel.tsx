@@ -135,7 +135,7 @@ interface PreviewPanelProps {
   template?: "react-ts" | "react" | "vanilla" | "vanilla-ts"
   onStatusChange?: (status: "idle" | "loading" | "ready" | "error") => void
   useSharedProvider?: boolean
-  autoRefreshToken?: number
+  onRequestSessionReset?: () => void
 }
 
 function PreviewEmptyState({
@@ -172,7 +172,6 @@ function PreviewToolbar({
 }) {
   const { sandpack } = useSandpack()
   const isLoading = status === "loading"
-  const runSandpack = sandpack.runSandpack
 
   const handleOpenInCodeSandbox = () => {
     const files = sandpack.files
@@ -184,14 +183,6 @@ function PreviewToolbar({
       "_blank"
     )
   }
-
-  const handleRefreshClick = React.useCallback(() => {
-    onRefresh()
-
-    window.setTimeout(() => {
-      void runSandpack()
-    }, 0)
-  }, [onRefresh, runSandpack])
 
   return (
     <div className="flex items-center justify-between border-b border-zinc-700/50 bg-zinc-800/80 px-3 py-2 backdrop-blur-sm">
@@ -230,7 +221,7 @@ function PreviewToolbar({
 
       <div className="flex items-center gap-1.5">
         <button
-          onClick={handleRefreshClick}
+          onClick={onRefresh}
           className="flex items-center gap-1.5 rounded-md bg-zinc-700/40 px-2.5 py-1.5 text-xs font-medium text-zinc-300 transition-all hover:bg-zinc-600/60 hover:text-white"
           title="Refresh Preview"
         >
@@ -254,10 +245,12 @@ function PreviewContent({
   viewport,
   onStatusChange,
   refreshToken,
+  manualInitialRun = false,
 }: {
   viewport: ViewportSize
   onStatusChange?: (status: "idle" | "loading" | "ready" | "error") => void
   refreshToken: number
+  manualInitialRun?: boolean
 }) {
   const { sandpack, listen } = useSandpack()
   const sandpackStatus = sandpack.status
@@ -267,8 +260,8 @@ function PreviewContent({
   const hasTimedOut = sandpackStatus === "timeout"
   const hasError = sandpackError !== null || hasTimedOut
   const previewRootRef = React.useRef<HTMLDivElement | null>(null)
-  const autoRetryRef = React.useRef(false)
   const lastAutoRefreshTokenRef = React.useRef<number | null>(null)
+  const initialRunRequestedRef = React.useRef(false)
   const [isStuck, setIsStuck] = React.useState(false)
   const [isPreviewReady, setIsPreviewReady] = React.useState(false)
   const [iframeElement, setIframeElement] =
@@ -289,20 +282,29 @@ function PreviewContent({
   }, [])
 
   React.useEffect(() => {
-    const timer = window.setTimeout(() => {
-      if (sandpackStatus === "initial" || sandpackStatus === "idle") {
-        void runSandpack()
-      }
-    }, 250)
-
-    return () => window.clearTimeout(timer)
-  }, [runSandpack, sandpackFiles, sandpackStatus])
-
-  React.useEffect(() => {
-    autoRetryRef.current = false
     setIsPreviewReady(false)
     setIsStuck(false)
   }, [sandpackFiles])
+
+  React.useEffect(() => {
+    if (
+      !manualInitialRun ||
+      initialRunRequestedRef.current ||
+      !iframeElement ||
+      hasError ||
+      (sandpackStatus !== "initial" && sandpackStatus !== "idle")
+    ) {
+      return
+    }
+
+    initialRunRequestedRef.current = true
+
+    const timer = window.setTimeout(() => {
+      void runSandpack()
+    }, 0)
+
+    return () => window.clearTimeout(timer)
+  }, [hasError, iframeElement, manualInitialRun, runSandpack, sandpackStatus])
 
   React.useEffect(() => {
     if (
@@ -313,7 +315,6 @@ function PreviewContent({
     }
 
     lastAutoRefreshTokenRef.current = refreshToken
-    autoRetryRef.current = false
     setIsPreviewReady(false)
     setIsStuck(false)
 
@@ -323,27 +324,6 @@ function PreviewContent({
 
     return () => window.clearTimeout(timer)
   }, [refreshToken, runSandpack])
-
-  React.useEffect(() => {
-    if (
-      hasError ||
-      isPreviewReady ||
-      sandpackStatus !== "idle" ||
-      autoRetryRef.current ||
-      !iframeElement
-    ) {
-      return
-    }
-
-    autoRetryRef.current = true
-
-    const timer = window.setTimeout(() => {
-      void runSandpack()
-    }, 0)
-
-    return () => window.clearTimeout(timer)
-  }, [hasError, iframeElement, isPreviewReady, runSandpack, sandpackStatus])
-
   React.useEffect(() => {
     if (!onStatusChange) {
       return
@@ -525,7 +505,7 @@ export function PreviewPanel({
   template = "react-ts",
   onStatusChange,
   useSharedProvider = false,
-  autoRefreshToken = 0,
+  onRequestSessionReset,
 }: PreviewPanelProps) {
   const [viewport, setViewport] = React.useState<ViewportSize>("desktop")
   const [bundlerUrl, setBundlerUrl] = React.useState(SANDPACK_BUNDLER_URL)
@@ -533,7 +513,6 @@ export function PreviewPanel({
     "idle" | "loading" | "ready" | "error"
   >("idle")
   const [refreshToken, setRefreshToken] = React.useState(0)
-  const lastAutoRefreshTokenRef = React.useRef(0)
 
   React.useEffect(() => {
     const resolvedBundlerUrl = resolveBrowserSandpackBundlerUrl()
@@ -560,21 +539,14 @@ export function PreviewPanel({
   )
   const handleRefresh = React.useCallback(() => {
     setPreviewStatus("loading")
-    setRefreshToken((current) => current + 1)
-  }, [])
 
-  React.useEffect(() => {
-    if (
-      autoRefreshToken <= 0 ||
-      autoRefreshToken === lastAutoRefreshTokenRef.current
-    ) {
+    if (useSharedProvider && onRequestSessionReset) {
+      onRequestSessionReset()
       return
     }
 
-    lastAutoRefreshTokenRef.current = autoRefreshToken
-    setPreviewStatus("loading")
     setRefreshToken((current) => current + 1)
-  }, [autoRefreshToken])
+  }, [onRequestSessionReset, useSharedProvider])
 
   if (!hasSandpackRuntime) {
     return (
@@ -612,6 +584,7 @@ export function PreviewPanel({
             viewport={viewport}
             onStatusChange={handlePreviewStatusChange}
             refreshToken={refreshToken}
+            manualInitialRun={true}
           />
         </div>
       </div>
@@ -656,6 +629,7 @@ export function PreviewPanel({
             viewport={viewport}
             onStatusChange={handlePreviewStatusChange}
             refreshToken={refreshToken}
+            manualInitialRun={false}
           />
         </div>
       </SandpackProvider>
