@@ -52,6 +52,7 @@ export const DEFAULT_DEPENDENCIES: SandpackDependency = {
 }
 
 const LOCAL_BUNDLER_HOSTS = new Set(["0.0.0.0", "127.0.0.1", "localhost"])
+export const DEFAULT_SANDPACK_BUNDLER_URL = "https://sandpack-bundler.codesandbox.io"
 
 function normalizeBundlerUrl(url: string): string {
   const trimmedUrl = url.trim().replace(/\/+$/, "")
@@ -101,29 +102,6 @@ export function resolveBrowserSandpackBundlerUrl(baseUrl: string = SANDPACK_BUND
     return baseUrl
   }
 }
-
-export const DEFAULT_SANDPACK_BUNDLER_HOST =
-  process.env.SANDPACK_BUNDLER_HOST?.trim() || "0.0.0.0"
-
-export const DEFAULT_SANDPACK_BUNDLER_PUBLIC_HOST =
-  process.env.SANDPACK_BUNDLER_PUBLIC_HOST?.trim() ||
-  (() => {
-    try {
-      return process.env.NEXT_PUBLIC_APP_URL
-        ? new URL(process.env.NEXT_PUBLIC_APP_URL).hostname
-        : "localhost"
-    } catch {
-      return "localhost"
-    }
-  })()
-
-export const DEFAULT_SANDPACK_BUNDLER_PORT =
-  process.env.SANDPACK_BUNDLER_PORT?.trim() || "3101"
-
-export const DEFAULT_SANDPACK_BUNDLER_URL =
-  normalizeBundlerUrl(
-    `http://${DEFAULT_SANDPACK_BUNDLER_PUBLIC_HOST}:${DEFAULT_SANDPACK_BUNDLER_PORT}`
-  )
 
 export const SANDPACK_BUNDLER_URL =
   normalizeBundlerUrl(

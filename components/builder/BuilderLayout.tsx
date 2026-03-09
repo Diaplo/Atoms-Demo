@@ -258,41 +258,43 @@ function BuilderContent({
           </div>
         )}
 
-        {(activeView === "preview" || activeView === "split") && (
-          <div
-            className={cn(
-              "flex h-full min-h-0 min-w-0 flex-col overflow-hidden",
-              activeView === "split" ? "w-1/2" : "flex-1"
-            )}
-          >
-            {isHydratingHistory ? (
-              <div className="flex h-full min-h-0 min-w-0 flex-col overflow-hidden rounded-none border-0 bg-zinc-950">
-                <div className="flex h-full min-h-0 items-center justify-center px-6 text-center">
-                  <div className="flex max-w-sm flex-col items-center gap-3 rounded-2xl border border-zinc-800 bg-zinc-900/95 px-6 py-5 shadow-xl">
-                    <div className="flex size-10 items-center justify-center rounded-full bg-primary/10 text-primary">
-                      <Loader2 className="size-5 animate-spin" />
-                    </div>
-                    <div className="space-y-1">
-                      <h3 className="text-sm font-semibold text-zinc-100">
-                        Loading chat code
-                      </h3>
-                      <p className="text-sm text-zinc-400">
-                        Preview will start after the saved files finish loading.
-                      </p>
-                    </div>
+        <div
+          className={cn(
+            "h-full min-h-0 min-w-0 flex-col overflow-hidden",
+            activeView === "code"
+              ? "hidden"
+              : activeView === "split"
+                ? "flex w-1/2"
+                : "flex flex-1"
+          )}
+        >
+          {isHydratingHistory ? (
+            <div className="flex h-full min-h-0 min-w-0 flex-col overflow-hidden rounded-none border-0 bg-zinc-950">
+              <div className="flex h-full min-h-0 items-center justify-center px-6 text-center">
+                <div className="flex max-w-sm flex-col items-center gap-3 rounded-2xl border border-zinc-800 bg-zinc-900/95 px-6 py-5 shadow-xl">
+                  <div className="flex size-10 items-center justify-center rounded-full bg-primary/10 text-primary">
+                    <Loader2 className="size-5 animate-spin" />
+                  </div>
+                  <div className="space-y-1">
+                    <h3 className="text-sm font-semibold text-zinc-100">
+                      Loading chat code
+                    </h3>
+                    <p className="text-sm text-zinc-400">
+                      Preview will start after the saved files finish loading.
+                    </p>
                   </div>
                 </div>
               </div>
-            ) : (
-              <PreviewPanel
-                files={currentFiles}
-                className="h-full rounded-none border-0"
-                useSharedProvider={useSharedProvider}
-                autoRefreshToken={previewAutoRefreshToken}
-              />
-            )}
-          </div>
-        )}
+            </div>
+          ) : (
+            <PreviewPanel
+              files={currentFiles}
+              className="h-full rounded-none border-0"
+              useSharedProvider={useSharedProvider}
+              autoRefreshToken={previewAutoRefreshToken}
+            />
+          )}
+        </div>
       </div>
     </>
   )
@@ -316,6 +318,7 @@ export function BuilderLayout({ className, defaultView = "split" }: BuilderLayou
   const dragStartXRef = React.useRef(0)
   const dragStartWidthRef = React.useRef(0)
   const wasHydratingHistoryRef = React.useRef(false)
+  const versionsRequestIdRef = React.useRef(0)
 
   const currentFiles = useCurrentFiles()
   const activeFile = useActiveFile()
@@ -358,6 +361,7 @@ export function BuilderLayout({ className, defaultView = "split" }: BuilderLayou
 
   const loadVersions = React.useCallback(
     async (chatId: string) => {
+      const requestId = ++versionsRequestIdRef.current
       setVersionsLoading(true)
       setVersionsError(null)
 
@@ -376,6 +380,10 @@ export function BuilderLayout({ className, defaultView = "split" }: BuilderLayou
           : []
         const hydratedVersions = hydrateVersionSnapshots(normalizedVersions)
 
+        if (versionsRequestIdRef.current !== requestId) {
+          return
+        }
+
         setVersions(hydratedVersions)
 
         if (hydratedVersions.length > 0) {
@@ -392,13 +400,19 @@ export function BuilderLayout({ className, defaultView = "split" }: BuilderLayou
           clearFiles()
         }
       } catch (error) {
+        if (versionsRequestIdRef.current !== requestId) {
+          return
+        }
+
         console.error("Error loading versions:", error)
         setVersionsError("Failed to load version history")
         clearVersions()
         clearFiles()
       } finally {
-        setHydratedChatId(chatId)
-        setVersionsLoading(false)
+        if (versionsRequestIdRef.current === requestId) {
+          setHydratedChatId(chatId)
+          setVersionsLoading(false)
+        }
       }
     },
     [
@@ -561,7 +575,6 @@ export function BuilderLayout({ className, defaultView = "split" }: BuilderLayou
     }
 
     clearVersions()
-    clearFiles()
     void loadVersions(activeChatId)
   }, [activeChatId, clearFiles, clearVersions, hydrateVersions, loadVersions])
 

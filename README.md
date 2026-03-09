@@ -37,25 +37,21 @@
    npm run dev
    ```
 
-## 自托管 Sandpack Bundler
+## Sandpack Bundler
 
-当前项目会在启动 Next.js 的同时，自动启动本地 Sandpack bundler。
+当前项目本地和线上统一使用官方公开 Sandpack bundler。
 
-- `npm run dev`：同时启动 Next.js 和本地 bundler，默认地址为 `http://127.0.0.1:3101`
-- `npm run sandpack:bundler`：只启动 bundler 静态服务
-- `npm run dev:next`：只启动 Next.js，适合接入其他 bundler 地址
+- `npm run dev`：启动 Next.js 开发环境
+- `npm run build` + `npm run start`：启动生产构建后的 Next.js 服务
 
 相关环境变量：
 
 ```bash
-SANDPACK_BUNDLER_HOST=0.0.0.0
-SANDPACK_BUNDLER_PUBLIC_HOST=localhost
-SANDPACK_BUNDLER_PORT=3101
-NEXT_PUBLIC_SANDPACK_BUNDLER_URL=http://localhost:3101
+NEXT_PUBLIC_SANDPACK_BUNDLER_URL=https://sandpack-bundler.codesandbox.io
 ```
 
-如果要部署到线上，建议把 bundler 独立部署到单独的域名或端口，并将
-`NEXT_PUBLIC_SANDPACK_BUNDLER_URL` 指向对应的公开地址。
+如果没有额外配置，代码默认也会回退到官方 bundler。
+如果后续需要切回自托管，可以再通过 `NEXT_PUBLIC_SANDPACK_BUNDLER_URL` 覆盖。
 
 ## 功能特性
 

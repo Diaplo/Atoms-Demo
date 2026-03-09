@@ -253,11 +253,11 @@ function PreviewToolbar({
 function PreviewContent({
   viewport,
   onStatusChange,
-  autoRefreshToken,
+  refreshToken,
 }: {
   viewport: ViewportSize
   onStatusChange?: (status: "idle" | "loading" | "ready" | "error") => void
-  autoRefreshToken: number
+  refreshToken: number
 }) {
   const { sandpack, listen } = useSandpack()
   const sandpackStatus = sandpack.status
@@ -276,7 +276,9 @@ function PreviewContent({
   const isLoading =
     !hasError &&
     !isPreviewReady &&
-    (sandpackStatus === "initial" || sandpackStatus === "running")
+    (sandpackStatus === "initial" ||
+      sandpackStatus === "running" ||
+      sandpackStatus === "idle")
 
   const syncIframeElement = React.useCallback(() => {
     const nextIframe =
@@ -302,13 +304,13 @@ function PreviewContent({
 
   React.useEffect(() => {
     if (
-      autoRefreshToken <= 0 ||
-      autoRefreshToken === lastAutoRefreshTokenRef.current
+      refreshToken <= 0 ||
+      refreshToken === lastAutoRefreshTokenRef.current
     ) {
       return
     }
 
-    lastAutoRefreshTokenRef.current = autoRefreshToken
+    lastAutoRefreshTokenRef.current = refreshToken
     autoRetryRef.current = false
     setIsPreviewReady(false)
     setIsStuck(false)
@@ -318,14 +320,15 @@ function PreviewContent({
     }, 0)
 
     return () => window.clearTimeout(timer)
-  }, [autoRefreshToken, runSandpack])
+  }, [refreshToken, runSandpack])
 
   React.useEffect(() => {
     if (
       hasError ||
       isPreviewReady ||
       sandpackStatus !== "idle" ||
-      autoRetryRef.current
+      autoRetryRef.current ||
+      !iframeElement
     ) {
       return
     }
@@ -337,7 +340,7 @@ function PreviewContent({
     }, 0)
 
     return () => window.clearTimeout(timer)
-  }, [hasError, isPreviewReady, runSandpack, sandpackStatus])
+  }, [hasError, iframeElement, isPreviewReady, runSandpack, sandpackStatus])
 
   React.useEffect(() => {
     if (!onStatusChange) {
@@ -524,10 +527,10 @@ export function PreviewPanel({
 }: PreviewPanelProps) {
   const [viewport, setViewport] = React.useState<ViewportSize>("desktop")
   const [bundlerUrl, setBundlerUrl] = React.useState(SANDPACK_BUNDLER_URL)
-  const [previewInstance, setPreviewInstance] = React.useState(0)
   const [previewStatus, setPreviewStatus] = React.useState<
     "idle" | "loading" | "ready" | "error"
   >("idle")
+  const [refreshToken, setRefreshToken] = React.useState(0)
   const lastAutoRefreshTokenRef = React.useRef(0)
 
   React.useEffect(() => {
@@ -555,7 +558,7 @@ export function PreviewPanel({
   )
   const handleRefresh = React.useCallback(() => {
     setPreviewStatus("loading")
-    setPreviewInstance((current) => current + 1)
+    setRefreshToken((current) => current + 1)
   }, [])
 
   React.useEffect(() => {
@@ -567,8 +570,9 @@ export function PreviewPanel({
     }
 
     lastAutoRefreshTokenRef.current = autoRefreshToken
-    handleRefresh()
-  }, [autoRefreshToken, handleRefresh])
+    setPreviewStatus("loading")
+    setRefreshToken((current) => current + 1)
+  }, [autoRefreshToken])
 
   if (!hasSandpackRuntime) {
     return (
@@ -603,10 +607,9 @@ export function PreviewPanel({
 
         <div className="relative min-h-0 min-w-0 flex-1 overflow-hidden bg-zinc-950">
           <PreviewContent
-            key={previewInstance}
             viewport={viewport}
             onStatusChange={handlePreviewStatusChange}
-            autoRefreshToken={autoRefreshToken}
+            refreshToken={refreshToken}
           />
         </div>
       </div>
@@ -648,10 +651,9 @@ export function PreviewPanel({
 
         <div className="relative min-h-0 min-w-0 flex-1 overflow-hidden bg-zinc-950">
           <PreviewContent
-            key={previewInstance}
             viewport={viewport}
             onStatusChange={handlePreviewStatusChange}
-            autoRefreshToken={autoRefreshToken}
+            refreshToken={refreshToken}
           />
         </div>
       </SandpackProvider>
