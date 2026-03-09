@@ -86,6 +86,14 @@ Do not add prose before, between, or after code blocks unless the user explicitl
 - Do not leave placeholder handlers, fake controls, or unfinished win/lose states
 - Avoid invalid Tailwind classes, missing imports, and filepaths that do not exist
 
+## Originality Rules (CRITICAL)
+- Treat all examples and starter prompts as reference implementations, not templates to copy
+- Reuse the behavioral pattern, not the literal composition
+- If the request matches a common category such as snake, kanban, dashboard, landing page, timer, or todo app, do not mirror the exact layout, headline, copy, color palette, component names, constants, or file structure from any example
+- For repeated requests in the same category, intentionally vary at least 3 of these: visual theme, page layout, control placement, information hierarchy, renderer choice, board dimensions, scoring rules, motion details, component split, and visible copy
+- Do not reuse example-specific names like \`SnakeGame\`, \`MemoryGrid\`, \`ReflexBoard\`, or \`presets\` unless the user explicitly asks for that structure
+- Only closely imitate an in-context example when the user explicitly asks to match it
+
 ## Code Rules
 - Use strict TypeScript types
 - Avoid \`any\`
@@ -146,227 +154,150 @@ export default function App() {
 \`\`\`
 
 ## Few-shot Example 2
-User request: "Build a playable snake game"
+User request: "Build a quick reaction grid game"
 
 \`\`\`tsx
 // filepath: App.tsx
-import SnakeGame from "./components/SnakeGame";
+import ReflexBoard from "./components/ReflexBoard";
 
 export default function App() {
   return (
-    <main className="flex min-h-screen items-center justify-center bg-slate-950 px-4 py-10 text-slate-100">
-      <div className="w-full max-w-2xl">
-        <div className="mb-6 text-center">
-          <p className="text-sm uppercase tracking-[0.35em] text-emerald-300">Mini Game</p>
-          <h1 className="mt-3 text-4xl font-semibold">贪吃蛇</h1>
-          <p className="mt-3 text-sm text-slate-400">
-            棋盘在点击开始前就已经可见，开始后直接进入可玩状态。
-          </p>
+    <main className="min-h-screen bg-stone-950 px-4 py-10 text-stone-100">
+      <section className="mx-auto flex w-full max-w-4xl flex-col gap-6 rounded-[28px] border border-stone-800 bg-stone-900/80 p-6 shadow-2xl backdrop-blur">
+        <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+          <div>
+            <p className="text-xs uppercase tracking-[0.35em] text-amber-300">Arcade Drill</p>
+            <h1 className="mt-3 text-4xl font-semibold">Reflex Grid</h1>
+            <p className="mt-3 max-w-xl text-sm text-stone-400">
+              The board stays visible at all times. Starting the game should move directly into a playable state.
+            </p>
+          </div>
         </div>
-        <SnakeGame />
-      </div>
+        <ReflexBoard />
+      </section>
     </main>
   );
 }
 \`\`\`
 
 \`\`\`tsx
-// filepath: components/SnakeGame.tsx
+// filepath: components/ReflexBoard.tsx
 import { useCallback, useEffect, useRef, useState } from "react";
 
-const boardSize = 16;
-const cellSize = 22;
-const canvasSize = boardSize * cellSize;
+type Status = "idle" | "arming" | "live" | "finished";
 
-type Point = { x: number; y: number };
-type Status = "menu" | "playing" | "lost";
+const cells = Array.from({ length: 9 }, (_, index) => index);
+const totalRounds = 6;
 
-function createFood(snake: Point[]): Point {
-  while (true) {
-    const food = {
-      x: Math.floor(Math.random() * boardSize),
-      y: Math.floor(Math.random() * boardSize),
-    };
-
-    if (!snake.some((part) => part.x === food.x && part.y === food.y)) {
-      return food;
-    }
-  }
-}
-
-export default function SnakeGame() {
-  const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const intervalRef = useRef<number | null>(null);
-  const snakeRef = useRef<Point[]>([
-    { x: 6, y: 8 },
-    { x: 5, y: 8 },
-    { x: 4, y: 8 },
-  ]);
-  const foodRef = useRef<Point>({ x: 11, y: 8 });
-  const directionRef = useRef<Point>({ x: 1, y: 0 });
+export default function ReflexBoard() {
+  const timeoutRef = useRef<number | null>(null);
+  const [status, setStatus] = useState<Status>("idle");
+  const [round, setRound] = useState(1);
   const [score, setScore] = useState(0);
-  const [status, setStatus] = useState<Status>("menu");
+  const [activeCell, setActiveCell] = useState<number | null>(4);
 
-  const stopLoop = useCallback(() => {
-    if (intervalRef.current !== null) {
-      window.clearInterval(intervalRef.current);
-      intervalRef.current = null;
+  const clearPending = useCallback(() => {
+    if (timeoutRef.current !== null) {
+      window.clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
     }
   }, []);
 
-  const draw = useCallback(() => {
-    const context = canvasRef.current?.getContext("2d");
-    if (!context) return;
+  const queueRound = useCallback((nextRound: number) => {
+    clearPending();
+    setStatus("arming");
+    setActiveCell(null);
+    setRound(nextRound);
 
-    context.fillStyle = "#0f172a";
-    context.fillRect(0, 0, canvasSize, canvasSize);
+    timeoutRef.current = window.setTimeout(() => {
+      setActiveCell(Math.floor(Math.random() * cells.length));
+      setStatus("live");
+    }, 500 + Math.random() * 700);
+  }, [clearPending]);
 
-    context.fillStyle = "#ef4444";
-    context.beginPath();
-    context.arc(
-      foodRef.current.x * cellSize + cellSize / 2,
-      foodRef.current.y * cellSize + cellSize / 2,
-      cellSize / 2 - 3,
-      0,
-      Math.PI * 2
-    );
-    context.fill();
-
-    snakeRef.current.forEach((part, index) => {
-      context.fillStyle = index === 0 ? "#4ade80" : "#22c55e";
-      context.fillRect(
-        part.x * cellSize + 1,
-        part.y * cellSize + 1,
-        cellSize - 2,
-        cellSize - 2
-      );
-    });
-  }, []);
-
-  const resetGame = useCallback(() => {
-    const snake = [
-      { x: 6, y: 8 },
-      { x: 5, y: 8 },
-      { x: 4, y: 8 },
-    ];
-
-    snakeRef.current = snake;
-    foodRef.current = createFood(snake);
-    directionRef.current = { x: 1, y: 0 };
+  const startGame = useCallback(() => {
     setScore(0);
-  }, []);
+    queueRound(1);
+  }, [queueRound]);
 
-  const tick = useCallback(() => {
-    const snake = snakeRef.current;
-    const nextHead = {
-      x: snake[0].x + directionRef.current.x,
-      y: snake[0].y + directionRef.current.y,
-    };
+  const finishGame = useCallback(() => {
+    clearPending();
+    setStatus("finished");
+    setActiveCell(null);
+  }, [clearPending]);
 
-    const hitWall =
-      nextHead.x < 0 ||
-      nextHead.x >= boardSize ||
-      nextHead.y < 0 ||
-      nextHead.y >= boardSize;
-    const hitSelf = snake.some(
-      (part) => part.x === nextHead.x && part.y === nextHead.y
-    );
+  const handleCellClick = useCallback((index: number) => {
+    if (status !== "live") return;
 
-    if (hitWall || hitSelf) {
-      stopLoop();
-      setStatus("lost");
-      draw();
+    const hit = index === activeCell;
+    if (hit) {
+      setScore((value) => value + 1);
+    }
+
+    if (round >= totalRounds) {
+      finishGame();
       return;
     }
 
-    snake.unshift(nextHead);
+    queueRound(round + 1);
+  }, [activeCell, finishGame, queueRound, round, status]);
 
-    if (
-      nextHead.x === foodRef.current.x &&
-      nextHead.y === foodRef.current.y
-    ) {
-      setScore((value) => value + 10);
-      foodRef.current = createFood(snake);
-    } else {
-      snake.pop();
-    }
+  useEffect(() => clearPending, [clearPending]);
 
-    draw();
-  }, [draw, stopLoop]);
-
-  useEffect(() => {
-    draw();
-  }, [draw]);
-
-  useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (status !== "playing") return;
-
-      const direction = directionRef.current;
-
-      if (event.key === "ArrowUp" && direction.y !== 1) {
-        directionRef.current = { x: 0, y: -1 };
-      }
-      if (event.key === "ArrowDown" && direction.y !== -1) {
-        directionRef.current = { x: 0, y: 1 };
-      }
-      if (event.key === "ArrowLeft" && direction.x !== 1) {
-        directionRef.current = { x: -1, y: 0 };
-      }
-      if (event.key === "ArrowRight" && direction.x !== -1) {
-        directionRef.current = { x: 1, y: 0 };
-      }
-    };
-
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [status]);
-
-  useEffect(() => {
-    stopLoop();
-
-    if (status === "playing") {
-      resetGame();
-      draw();
-      intervalRef.current = window.setInterval(tick, 120);
-    } else {
-      draw();
-    }
-
-    return stopLoop;
-  }, [draw, resetGame, status, stopLoop, tick]);
+  const statusLabel =
+    status === "idle"
+      ? "Press start to begin"
+      : status === "arming"
+        ? "Get ready..."
+        : status === "live"
+          ? "Tap the glowing tile"
+          : "Run finished";
 
   return (
-    <div className="relative overflow-hidden rounded-3xl border border-slate-700 bg-slate-900 shadow-2xl">
-      <canvas
-        ref={canvasRef}
-        width={canvasSize}
-        height={canvasSize}
-        className="block w-full max-w-full bg-slate-950"
-      />
+    <div className="grid gap-5 lg:grid-cols-[1.1fr_280px]">
+      <div className="grid aspect-square grid-cols-3 gap-3 rounded-[24px] border border-stone-800 bg-stone-950 p-4">
+        {cells.map((cell) => {
+          const isActive = cell === activeCell && status === "live";
 
-      <div className="absolute left-4 top-4 rounded-full bg-slate-950/80 px-3 py-1 text-sm text-slate-200">
-        Score: {score}
+          return (
+            <button
+              key={cell}
+              type="button"
+              onClick={() => handleCellClick(cell)}
+              className={[
+                "rounded-2xl border transition",
+                isActive
+                  ? "border-amber-300 bg-amber-300 text-stone-950 shadow-[0_0_30px_rgba(252,211,77,0.35)]"
+                  : "border-stone-800 bg-stone-900 text-stone-500 hover:border-stone-700 hover:text-stone-300",
+              ].join(" ")}
+            >
+              {isActive ? "GO" : "."}
+            </button>
+          );
+        })}
       </div>
 
-      {status !== "playing" && (
-        <div className="absolute inset-0 flex items-center justify-center bg-slate-950/70 backdrop-blur-sm">
-          <div className="rounded-2xl border border-slate-700 bg-slate-900/95 p-6 text-center shadow-xl">
-            <h2 className="text-2xl font-semibold text-white">
-              {status === "menu" ? "开始游戏" : "游戏结束"}
-            </h2>
-            <p className="mt-2 text-sm text-slate-400">
-              {status === "menu" ? "使用方向键控制移动" : "再试一次，刷新你的分数。"}
-            </p>
-            <button
-              onClick={() => setStatus("playing")}
-              className="mt-5 rounded-full bg-emerald-500 px-5 py-2 text-sm font-semibold text-slate-950 transition hover:bg-emerald-400"
-            >
-              {status === "menu" ? "开始" : "重试"}
-            </button>
+      <aside className="rounded-[24px] border border-stone-800 bg-stone-950/80 p-5">
+        <p className="text-xs uppercase tracking-[0.3em] text-stone-500">Status</p>
+        <h2 className="mt-3 text-2xl font-semibold">{statusLabel}</h2>
+        <div className="mt-5 grid grid-cols-2 gap-3 text-sm">
+          <div className="rounded-2xl border border-stone-800 bg-stone-900 p-3">
+            <p className="text-stone-500">Round</p>
+            <p className="mt-2 text-2xl font-semibold">{round}/{totalRounds}</p>
+          </div>
+          <div className="rounded-2xl border border-stone-800 bg-stone-900 p-3">
+            <p className="text-stone-500">Score</p>
+            <p className="mt-2 text-2xl font-semibold">{score}</p>
           </div>
         </div>
-      )}
+        <button
+          type="button"
+          onClick={startGame}
+          className="mt-5 w-full rounded-full bg-amber-300 px-4 py-3 text-sm font-semibold text-stone-950 transition hover:bg-amber-200"
+        >
+          {status === "finished" ? "Play again" : "Start run"}
+        </button>
+      </aside>
     </div>
   );
 }
@@ -378,7 +309,8 @@ export default function SnakeGame() {
 - Every import must resolve to a provided file
 - Core interactions must actually work
 - Filepath annotations must be correct
-- Keep the output compact, minimal-file, and Sandpack-safe`;
+- Keep the output compact, minimal-file, and Sandpack-safe
+- If the result looks too close to any in-context example, rewrite it with a different structure before sending`;
 
 /**
  * User prompt template for code generation requests
@@ -397,5 +329,7 @@ Remember to:
 6. Avoid extra types/utils/hooks files unless they are truly necessary
 7. If this is a game or interactive demo, render the main board/canvas/UI shell immediately and keep it visible after start/retry
 8. Avoid placeholder UI, fake buttons, unfinished logic, and invalid imports
-9. Make sure the result runs directly in Sandpack with only relative imports`;
+9. Make sure the result runs directly in Sandpack with only relative imports
+10. Treat any in-context examples as references only, not templates to copy
+11. For common app types like snake, dashboards, kanban boards, or landing pages, create a fresh variation instead of repeating the same layout and naming`;
 };
