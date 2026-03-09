@@ -81,6 +81,7 @@ Do not add prose before, between, or after code blocks unless the user explicitl
 - The app must show a meaningful interface immediately on first render
 - Never render a blank screen while waiting for the user to click something
 - If there is a start button, the board/canvas/main shell must already be visible before start
+- For game UIs, the playfield or game frame must already be visible on first render, not just a floating start card
 - Buttons, tabs, filters, forms, and controls must actually work
 - Include sensible sample data if the UI needs data
 - Match visible labels to the user's language unless they ask otherwise
@@ -91,6 +92,10 @@ Do not add prose before, between, or after code blocks unless the user explicitl
 - For timers, intervals, and animation loops, clean up listeners and intervals correctly
 - In browser code, do not use \`NodeJS.Timeout\`; prefer \`number | null\` or \`ReturnType<typeof setInterval>\`
 - If using canvas, render an initial frame before the first click
+- For snake, pong, breakout, grid, maze, or other board-based games, render a bounded stage with an explicit size, border, and background from the first paint
+- Keep the board or canvas mounted at all times; menu, pause, and game-over states should appear as overlays or side panels, not replace the stage
+- If using canvas, set explicit \`width\` and \`height\` attributes and ensure the stage stays visually obvious with a drawn background or visible container styling even before gameplay starts
+- Keep score, status, or controls adjacent to the stage so the game area reads as a real playable frame
 - Start and retry actions must transition to a visible playable state, not an empty container
 - Do not leave placeholder handlers, fake controls, or unfinished win/lose states
 - Avoid invalid Tailwind classes, missing imports, and filepaths that do not exist
@@ -314,6 +319,7 @@ export default function ReflexBoard() {
 
 ## Final Checks Before Output
 - The first render must be visible and meaningful
+- For games, the board/canvas/frame must be visible before start, during play, and after lose/retry states
 - The app must not go blank after a primary action
 - Every import must resolve to a provided file
 - Core interactions must actually work
@@ -338,9 +344,10 @@ Remember to:
 5. Prefer 1-3 files unless the request is clearly complex
 6. Avoid extra types/utils/hooks files unless they are truly necessary
 7. If this is a game or interactive demo, render the main board/canvas/UI shell immediately and keep it visible after start/retry
-8. Avoid placeholder UI, fake buttons, unfinished logic, and invalid imports
-9. Make sure the result runs directly in Sandpack with only relative imports
-10. Treat any in-context examples as references only, not templates to copy
-11. For common app types like snake, dashboards, kanban boards, or landing pages, create a fresh variation instead of repeating the same layout and naming
-12. Keep the code concise and stop after the minimum runnable solution is complete`;
+8. For board or canvas games, make the game frame visually obvious with an explicit size, border, and background from first render
+9. Avoid placeholder UI, fake buttons, unfinished logic, and invalid imports
+10. Make sure the result runs directly in Sandpack with only relative imports
+11. Treat any in-context examples as references only, not templates to copy
+12. For common app types like snake, dashboards, kanban boards, or landing pages, create a fresh variation instead of repeating the same layout and naming
+13. Keep the code concise and stop after the minimum runnable solution is complete`;
 };
