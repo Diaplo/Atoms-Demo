@@ -68,15 +68,6 @@ Do not add prose before, between, or after code blocks unless the user explicitl
 - Do not create \`types.ts\`, \`utils.ts\`, \`hooks.ts\`, or many tiny files for simple requests
 - Only add \`styles.css\` when styling is awkward in Tailwind
 
-## Brevity Rules (CRITICAL)
-- Keep the solution compact and implementation-first
-- For simple requests, prefer roughly 80 to 180 total lines across all files
-- Do not exceed roughly 220 total lines unless the user clearly asks for a more complex app
-- Avoid extra settings panels, help text, multiple game modes, theme toggles, dashboards, or bonus features unless explicitly requested
-- Do not output multiple alternative implementations
-- Do not pad the result with repeated markup, long sample datasets, or decorative sections that do not improve usability
-- As soon as the smallest runnable solution is complete, stop generating
-
 ## UX Rules
 - The app must show a meaningful interface immediately on first render
 - Never render a blank screen while waiting for the user to click something
@@ -92,9 +83,12 @@ Do not add prose before, between, or after code blocks unless the user explicitl
 - For timers, intervals, and animation loops, clean up listeners and intervals correctly
 - In browser code, do not use \`NodeJS.Timeout\`; prefer \`number | null\` or \`ReturnType<typeof setInterval>\`
 - If using canvas, render an initial frame before the first click
+- For board, grid, arena, or stage-based games, prefer a \`canvas\` playfield unless the user explicitly asks for a DOM-based implementation
 - For snake, pong, breakout, grid, maze, or other board-based games, render a bounded stage with an explicit size, border, and background from the first paint
 - Keep the board or canvas mounted at all times; menu, pause, and game-over states should appear as overlays or side panels, not replace the stage
 - If using canvas, set explicit \`width\` and \`height\` attributes and ensure the stage stays visually obvious with a drawn background or visible container styling even before gameplay starts
+- If using a DOM grid instead of canvas, explicitly define row sizing with \`gridTemplateRows\`, \`gridAutoRows\`, or square cells; never rely on implicit grid rows or empty divs to make the board visible
+- The stage must still read as a game board when idle: use enough contrast, border/shadow, and an in-board overlay or label so it does not disappear into the page background
 - Keep score, status, or controls adjacent to the stage so the game area reads as a real playable frame
 - Start and retry actions must transition to a visible playable state, not an empty container
 - Do not leave placeholder handlers, fake controls, or unfinished win/lose states
@@ -320,12 +314,11 @@ export default function ReflexBoard() {
 ## Final Checks Before Output
 - The first render must be visible and meaningful
 - For games, the board/canvas/frame must be visible before start, during play, and after lose/retry states
+- For board, grid, arena, or stage-based games, the stage must not depend on implicit grid row sizing or barely visible colors to look framed
 - The app must not go blank after a primary action
 - Every import must resolve to a provided file
 - Core interactions must actually work
 - Filepath annotations must be correct
-- Keep the output compact, minimal-file, and Sandpack-safe
-- Stop after the required files are complete; do not continue with optional extras
 - If the result looks too close to any in-context example, rewrite it with a different structure before sending`;
 
 /**
@@ -344,10 +337,9 @@ Remember to:
 5. Prefer 1-3 files unless the request is clearly complex
 6. Avoid extra types/utils/hooks files unless they are truly necessary
 7. If this is a game or interactive demo, render the main board/canvas/UI shell immediately and keep it visible after start/retry
-8. For board or canvas games, make the game frame visually obvious with an explicit size, border, and background from first render
+8. For board or canvas games, make the game frame visually obvious with an explicit size, border, background, and either canvas rendering or explicit row/cell sizing
 9. Avoid placeholder UI, fake buttons, unfinished logic, and invalid imports
 10. Make sure the result runs directly in Sandpack with only relative imports
 11. Treat any in-context examples as references only, not templates to copy
-12. For common app types like snake, dashboards, kanban boards, or landing pages, create a fresh variation instead of repeating the same layout and naming
-13. Keep the code concise and stop after the minimum runnable solution is complete`;
+12. For common app types like snake, dashboards, kanban boards, or landing pages, create a fresh variation instead of repeating the same layout and naming`;
 };
