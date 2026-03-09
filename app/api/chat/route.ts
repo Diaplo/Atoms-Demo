@@ -3,7 +3,7 @@ import { createOpenAI } from '@ai-sdk/openai'
 import { NextRequest } from 'next/server'
 import { SYSTEM_PROMPT } from '@/lib/prompts/system-prompt'
 
-export const maxDuration = 60
+export const maxDuration = 300
 
 interface ChatMessage {
   role: 'user' | 'assistant' | 'system'
