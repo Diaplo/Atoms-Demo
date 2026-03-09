@@ -1,0 +1,27 @@
+{
+  "version": "6",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "6",
+      "when": 1772881671024,
+      "tag": "0000_calm_eternity",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1772901828087,
+      "tag": "0001_complex_whistler",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1773035187271,
+      "tag": "0002_overjoyed_ogun",
+      "breakpoints": true
+    }
+  ]
+}

@@ -87,6 +87,10 @@
   html {
     @apply font-sans;
   }
+  html,
+  body {
+    height: 100%;
+  }
 }
 
 @layer base {
@@ -96,4 +100,128 @@
   body {
     @apply bg-background text-foreground;
   }
+}
+
+.sp-wrapper,
+.sp-layout,
+.sp-stack,
+.sp-editor,
+.sp-editor-viewer,
+.sp-preview,
+.sp-preview-container,
+.sp-code-editor,
+.sp-code-editor > div,
+.sp-cm,
+.sp-code-editor .cm-editor,
+.sp-code-editor .cm-scroller {
+  min-height: 0 !important;
+}
+
+.sp-wrapper,
+.sp-layout,
+.sp-stack,
+.sp-editor,
+.sp-editor-viewer,
+.sp-preview,
+.sp-preview-container,
+.sp-code-editor,
+.sp-code-editor > div,
+.sp-cm,
+.sp-code-editor .cm-editor,
+.sp-code-editor .cm-scroller {
+  height: 100% !important;
+}
+
+.sp-wrapper,
+.sp-layout,
+.sp-stack,
+.sp-editor,
+.sp-editor-viewer,
+.sp-preview,
+.sp-preview-container {
+  display: flex !important;
+}
+
+.sp-wrapper,
+.sp-layout,
+.sp-stack,
+.sp-editor,
+.sp-editor-viewer,
+.sp-preview,
+.sp-preview-container,
+.sp-code-editor,
+.sp-code-editor > div,
+.sp-cm,
+.sp-code-editor .cm-editor {
+  min-width: 0 !important;
+}
+
+.sp-wrapper,
+.sp-layout,
+.sp-stack,
+.sp-editor,
+.sp-editor-viewer,
+.sp-preview {
+  flex: 1 1 auto !important;
+  flex-direction: column !important;
+  overflow: hidden !important;
+}
+
+.sp-layout > .sp-stack,
+.sp-editor > .sp-code-editor,
+.sp-editor-viewer > .sp-code-editor,
+.sp-preview > .sp-preview-container,
+.sp-preview-container > .sp-preview-iframe,
+.sp-preview-container > iframe {
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+}
+
+.sp-editor > .sp-tabs,
+.sp-editor-viewer > .sp-tabs {
+  flex-shrink: 0 !important;
+}
+
+.editor-scroll-shell > .sp-editor,
+.editor-scroll-shell > .sp-editor-viewer,
+.editor-scroll-shell .sp-code-editor {
+  min-height: 0 !important;
+  overflow: hidden !important;
+}
+
+.sp-code-editor,
+.sp-code-editor > div,
+.sp-cm,
+.sp-code-editor .cm-editor {
+  display: flex !important;
+  flex: 1 1 auto !important;
+  flex-direction: column !important;
+  overflow: hidden !important;
+}
+
+.sp-code-editor .cm-scroller {
+  flex: 1 1 auto !important;
+  overflow-x: auto !important;
+  overflow-y: auto !important;
+  max-height: 100% !important;
+  scrollbar-gutter: stable both-edges;
+}
+
+.sp-code-editor .cm-content,
+.sp-code-editor .cm-line {
+  white-space: pre !important;
+}
+
+.sp-preview-container {
+  overflow: hidden !important;
+}
+
+.sp-preview-iframe,
+.sp-preview iframe {
+  height: 100% !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  width: 100% !important;
+  display: block !important;
+  flex: 1 1 auto !important;
 }

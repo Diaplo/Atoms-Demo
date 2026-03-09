@@ -1,0 +1,1 @@
+ALTER TABLE "code_versions" ADD COLUMN "prompt" text;
