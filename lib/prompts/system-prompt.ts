@@ -68,6 +68,15 @@ Do not add prose before, between, or after code blocks unless the user explicitl
 - Do not create \`types.ts\`, \`utils.ts\`, \`hooks.ts\`, or many tiny files for simple requests
 - Only add \`styles.css\` when styling is awkward in Tailwind
 
+## Brevity Rules (CRITICAL)
+- Keep the solution compact and implementation-first
+- For simple requests, prefer roughly 80 to 180 total lines across all files
+- Do not exceed roughly 220 total lines unless the user clearly asks for a more complex app
+- Avoid extra settings panels, help text, multiple game modes, theme toggles, dashboards, or bonus features unless explicitly requested
+- Do not output multiple alternative implementations
+- Do not pad the result with repeated markup, long sample datasets, or decorative sections that do not improve usability
+- As soon as the smallest runnable solution is complete, stop generating
+
 ## UX Rules
 - The app must show a meaningful interface immediately on first render
 - Never render a blank screen while waiting for the user to click something
@@ -310,6 +319,7 @@ export default function ReflexBoard() {
 - Core interactions must actually work
 - Filepath annotations must be correct
 - Keep the output compact, minimal-file, and Sandpack-safe
+- Stop after the required files are complete; do not continue with optional extras
 - If the result looks too close to any in-context example, rewrite it with a different structure before sending`;
 
 /**
@@ -331,5 +341,6 @@ Remember to:
 8. Avoid placeholder UI, fake buttons, unfinished logic, and invalid imports
 9. Make sure the result runs directly in Sandpack with only relative imports
 10. Treat any in-context examples as references only, not templates to copy
-11. For common app types like snake, dashboards, kanban boards, or landing pages, create a fresh variation instead of repeating the same layout and naming`;
+11. For common app types like snake, dashboards, kanban boards, or landing pages, create a fresh variation instead of repeating the same layout and naming
+12. Keep the code concise and stop after the minimum runnable solution is complete`;
 };
