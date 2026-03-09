@@ -1,6 +1,6 @@
 # AI-Builder Demo
 
-一个由 AI 驱动的代码生成与可视化平台，整体体验类似 atoms.dev 或 v0.dev。
+一个由 AI 驱动的代码生成与可视化平台。
 
 ## 技术栈
 
