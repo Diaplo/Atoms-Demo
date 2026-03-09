@@ -260,7 +260,7 @@ function BuilderContent({
 
         <div
           className={cn(
-            "h-full min-h-0 min-w-0 flex-col overflow-hidden",
+            "relative h-full min-h-0 min-w-0 flex-col overflow-hidden",
             activeView === "code"
               ? "hidden"
               : activeView === "split"
@@ -268,8 +268,14 @@ function BuilderContent({
                 : "flex flex-1"
           )}
         >
-          {isHydratingHistory ? (
-            <div className="flex h-full min-h-0 min-w-0 flex-col overflow-hidden rounded-none border-0 bg-zinc-950">
+          <PreviewPanel
+            files={currentFiles}
+            className="h-full rounded-none border-0"
+            useSharedProvider={useSharedProvider}
+            autoRefreshToken={previewAutoRefreshToken}
+          />
+          {isHydratingHistory && (
+            <div className="absolute inset-0 z-50 flex h-full min-h-0 min-w-0 flex-col overflow-hidden rounded-none border-0 bg-zinc-950/94 backdrop-blur-sm">
               <div className="flex h-full min-h-0 items-center justify-center px-6 text-center">
                 <div className="flex max-w-sm flex-col items-center gap-3 rounded-2xl border border-zinc-800 bg-zinc-900/95 px-6 py-5 shadow-xl">
                   <div className="flex size-10 items-center justify-center rounded-full bg-primary/10 text-primary">
@@ -286,13 +292,6 @@ function BuilderContent({
                 </div>
               </div>
             </div>
-          ) : (
-            <PreviewPanel
-              files={currentFiles}
-              className="h-full rounded-none border-0"
-              useSharedProvider={useSharedProvider}
-              autoRefreshToken={previewAutoRefreshToken}
-            />
           )}
         </div>
       </div>

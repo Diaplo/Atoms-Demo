@@ -300,6 +300,8 @@ function PreviewContent({
 
   React.useEffect(() => {
     autoRetryRef.current = false
+    setIsPreviewReady(false)
+    setIsStuck(false)
   }, [sandpackFiles])
 
   React.useEffect(() => {
